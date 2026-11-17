@@ -1,0 +1,193 @@
+version: "3.8"
+
+services:
+  # ============================================================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================================================
+
+  mongodb:
+    image: mongo:7.0
+    container_name: agentforge-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: agentforge
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentforge-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: agentforge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentforge-network
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.0
+    container_name: agentforge-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - agentforge-network
+
+  # ============================================================================
+  # BACKEND APPLICATION SERVICES
+  # ============================================================================
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    container_name: agentforge-auth
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: 8001
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/agentforge
+      REDIS_URL: redis://redis:6379
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-agentforge_internal_secret_dev_key}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - agentforge-network
+
+  chat-service:
+    build:
+      context: .
+      dockerfile: services/chat/Dockerfile
+    container_name: agentforge-chat
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      PORT: 8002
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/agentforge
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-agentforge_internal_secret_dev_key}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - agentforge-network
+
+  agent-service:
+    build:
+      context: .
+      dockerfile: services/agent/Dockerfile
+    container_name: agentforge-agent
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      PORT: 8003
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/agentforge
+      REDIS_URL: redis://redis:6379
+      CHAT_SERVICE: http://chat-service:8002
+      AUTH_SERVICE: http://auth-service:8001
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-agentforge_internal_secret_dev_key}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      QDRANT_URL: http://qdrant:6333
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - agentforge-network
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: services/billing/Dockerfile
+    container_name: agentforge-billing
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      PORT: 8004
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/agentforge
+      AUTH_SERVICE: http://auth-service:8001
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-agentforge_internal_secret_dev_key}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - agentforge-network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: agentforge-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      NODE_ENV: production
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      REDIS_URL: redis://redis:6379
+      AUTH_SERVICE: http://auth-service:8001
+      CHAT_SERVICE: http://chat-service:8002
+      AGENT_SERVICE: http://agent-service:8003
+      BILLING_SERVICE: http://billing-service:8004
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-agentforge_internal_secret_dev_key}
+    depends_on:
+      - auth-service
+      - chat-service
+      - agent-service
+      - billing-service
+      - redis
+    networks:
+      - agentforge-network
+
+volumes:
+  mongo-data:
+  redis-data:
+  qdrant-data:
+
+networks:
+  agentforge-network:
+    driver: bridge
