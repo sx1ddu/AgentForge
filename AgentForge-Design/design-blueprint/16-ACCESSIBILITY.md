@@ -1,3 +1,0 @@
-# Accessibility
-
-Target WCAG 2.2 AA. Verify contrast for text and non-text controls in both themes. Never encode execution state using color alone. Use semantic landmarks: nav, main, complementary inspector, footer. Buttons have names; icon-only controls have `aria-label` and tooltip. Use heading order and descriptive link text. Modal dialogs must trap focus, close with Escape, label title/description and return focus. Announce auth/payment/request errors via `role=alert`; background completion via polite live region. Preserve visible focus. Ensure keyboard-only operation and 44 px touch targets. Code editor read-only state is announced. Images need alt text or decorative empty alt. Respect `prefers-reduced-motion`.
