@@ -1,0 +1,19 @@
+# Node modules
+**/node_modules/
+
+# Environment files
+**/.env
+
+# Logs
+**/*.log
+
+# Build folders
+**/dist
+**/build
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Firebase / Google Cloud Service Account
+**/serviceAccountKey.json
