@@ -35,36 +35,44 @@ const MessageBubble = ({ role, content, images, file }) => {
   };
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} select-text`}>
       <div
-        className={`w-fit max-w-[92%] md:max-w-[76%] px-4 py-3 rounded-2xl break-words overflow-hidden leading-relaxed ${
+        className={`w-fit max-w-[94%] md:max-w-[80%] px-4 py-3 rounded-2xl break-words overflow-hidden leading-relaxed text-xs sm:text-[13px] ${
           isUser
-            ? "bg-gradient-to-br from-indigo-600 to-violet-700 text-white rounded-tr-sm shadow-md"
-            : "bg-[#13151c] text-slate-200 border border-white/[0.06] rounded-tl-sm shadow-sm"
+            ? "bg-[#131624] text-white border border-lime-400/25 rounded-tr-sm shadow-md"
+            : "bg-[#0e1017] text-slate-200 border border-white/[0.08] rounded-tl-sm shadow-sm"
         }`}
       >
-        {/* Attached PDF */}
+        {/* Assistant Header Tag */}
+        {!isUser && (
+          <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-white/[0.06] text-[10.5px] font-mono text-slate-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-lime-400" />
+            <span className="font-semibold text-slate-300">AgentForge Runtime</span>
+          </div>
+        )}
+
+        {/* Attached PDF / Document */}
         {file && (
           <a
             href={file.url}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 mb-3 hover:bg-white/10 transition cursor-pointer"
+            className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 mb-3 hover:bg-white/[0.06] transition cursor-pointer"
           >
-            <FileText size={18} className="text-red-400 shrink-0" />
+            <FileText size={17} className="text-amber-400 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-xs text-white truncate font-medium">{file.name}</p>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-slate-400 font-mono">
                 {Math.ceil((file.size || 0) / 1024)} KB
               </p>
             </div>
-            <ExternalLink size={14} className="text-slate-400 shrink-0 ml-auto" />
+            <ExternalLink size={13} className="text-slate-400 shrink-0 ml-auto" />
           </a>
         )}
 
         {/* Attached Images */}
         {images?.length > 0 && (
-          <div className="flex flex-wrap gap-3 mb-3">
+          <div className="flex flex-wrap gap-2.5 mb-3">
             {images.map((img, i) => (
               <img
                 key={i}
@@ -72,37 +80,44 @@ const MessageBubble = ({ role, content, images, file }) => {
                 onClick={() => setLightBox(img)}
                 alt="attachment"
                 loading="lazy"
-                className="w-44 h-32 rounded-xl object-cover border border-white/10 cursor-zoom-in hover:opacity-90 transition shadow-sm"
+                className="w-48 h-32 rounded-xl object-cover border border-white/[0.08] cursor-zoom-in hover:opacity-90 transition shadow-sm"
               />
             ))}
           </div>
         )}
 
+        {/* Markdown Content */}
         <Markdown
           remarkPlugins={[remarkGfm]}
           components={{
             h1: ({ children }) => (
-              <h1 className="text-xl font-bold mb-3 text-slate-100 border-b border-white/10 pb-1.5">{children}</h1>
+              <h1 className="text-base sm:text-lg font-bold mb-2.5 text-white border-b border-white/[0.08] pb-1">
+                {children}
+              </h1>
             ),
             h2: ({ children }) => (
-              <h2 className="text-lg font-semibold mt-4 mb-2 text-slate-200">{children}</h2>
+              <h2 className="text-sm sm:text-base font-semibold mt-3 mb-1.5 text-slate-100">
+                {children}
+              </h2>
             ),
             h3: ({ children }) => (
-              <h3 className="text-base font-semibold mt-3 mb-1.5 text-slate-200">{children}</h3>
+              <h3 className="text-xs sm:text-sm font-semibold mt-2.5 mb-1 text-slate-200">
+                {children}
+              </h3>
             ),
-            p: ({ children }) => <p className="mb-2.5 leading-relaxed">{children}</p>,
+            p: ({ children }) => <p className="mb-2 leading-relaxed text-slate-300">{children}</p>,
             ul: ({ children }) => (
-              <ul className="list-disc ml-5 mb-3 space-y-1 text-slate-300">{children}</ul>
+              <ul className="list-disc ml-5 mb-2.5 space-y-1 text-slate-300">{children}</ul>
             ),
             ol: ({ children }) => (
-              <ol className="list-decimal ml-5 mb-3 space-y-1 text-slate-300">{children}</ol>
+              <ol className="list-decimal ml-5 mb-2.5 space-y-1 text-slate-300">{children}</ol>
             ),
             li: ({ children }) => <li className="pl-0.5">{children}</li>,
             code: ({ className, children }) => {
               const value = String(children).replace(/\n$/, "");
               if (!className) {
                 return (
-                  <code className="bg-white/10 text-indigo-300 px-1.5 py-0.5 rounded text-[13px] font-mono">
+                  <code className="bg-[#141722] text-lime-300 px-1.5 py-0.5 rounded text-[11.5px] font-mono border border-white/[0.06]">
                     {value}
                   </code>
                 );
@@ -111,26 +126,26 @@ const MessageBubble = ({ role, content, images, file }) => {
               const language = className?.replace("language-", "") || "plaintext";
 
               return (
-                <div className="my-3 overflow-hidden rounded-xl border border-white/10 bg-[#0d1117] shadow-lg">
-                  <div className="flex items-center justify-between bg-[#161b22] border-b border-white/10 px-4 py-2">
-                    <span className="uppercase text-[11px] font-mono text-slate-400 tracking-wider">
+                <div className="my-3 overflow-hidden rounded-xl border border-white/[0.08] bg-[#090b10] shadow-lg">
+                  <div className="flex items-center justify-between bg-[#11131c] border-b border-white/[0.08] px-3.5 py-1.5">
+                    <span className="uppercase text-[10px] font-mono text-lime-400 tracking-wider">
                       {language}
                     </span>
 
                     <button
                       type="button"
                       onClick={() => copyCode(value)}
-                      className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition cursor-pointer px-2 py-1 rounded hover:bg-white/5"
-                      title="Copy code to clipboard"
+                      className="flex items-center gap-1 text-[11px] font-mono text-slate-400 hover:text-white transition cursor-pointer px-2 py-0.5 rounded hover:bg-white/[0.06]"
+                      title="Copy code"
                     >
                       {copiedCode === value ? (
                         <>
-                          <Check size={14} className="text-emerald-400" />
-                          <span className="text-emerald-400 font-medium">Copied</span>
+                          <Check size={12} className="text-lime-400" />
+                          <span className="text-lime-400">Copied</span>
                         </>
                       ) : (
                         <>
-                          <Copy size={14} />
+                          <Copy size={12} />
                           <span>Copy</span>
                         </>
                       )}
@@ -144,10 +159,10 @@ const MessageBubble = ({ role, content, images, file }) => {
                     showLineNumbers
                     customStyle={{
                       margin: 0,
-                      padding: "14px 16px",
-                      background: "#0d1117",
-                      fontSize: "12.5px",
-                      lineHeight: "1.6",
+                      padding: "12px 14px",
+                      background: "#090b10",
+                      fontSize: "12px",
+                      lineHeight: "1.55",
                     }}
                   >
                     {value}
@@ -157,18 +172,18 @@ const MessageBubble = ({ role, content, images, file }) => {
             },
             table: ({ children }) => (
               <div className="overflow-x-auto my-3">
-                <table className="border-collapse border border-white/10 w-full text-xs text-left">
+                <table className="border-collapse border border-white/[0.08] w-full text-xs text-left">
                   {children}
                 </table>
               </div>
             ),
             th: ({ children }) => (
-              <th className="border border-white/10 bg-white/5 px-3 py-2 font-semibold text-slate-200">
+              <th className="border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 font-semibold text-slate-200">
                 {children}
               </th>
             ),
             td: ({ children }) => (
-              <td className="border border-white/10 px-3 py-2 text-slate-300">
+              <td className="border border-white/[0.08] px-3 py-1.5 text-slate-300">
                 {children}
               </td>
             ),
@@ -177,9 +192,9 @@ const MessageBubble = ({ role, content, images, file }) => {
                 href={href}
                 target="_blank"
                 rel="noreferrer"
-                className="text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1 font-medium"
+                className="text-lime-400 hover:text-lime-300 underline inline-flex items-center gap-1 font-medium"
               >
-                {children} <ExternalLink size={13} />
+                {children} <ExternalLink size={12} />
               </a>
             ),
             img: ({ src, alt }) => {
@@ -193,7 +208,7 @@ const MessageBubble = ({ role, content, images, file }) => {
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                   }}
-                  className="max-w-md max-h-72 rounded-xl object-cover border border-white/10 cursor-zoom-in hover:opacity-90 transition my-2 shadow-md"
+                  className="max-w-md max-h-72 rounded-xl object-cover border border-white/[0.08] cursor-zoom-in hover:opacity-90 transition my-2 shadow-md"
                 />
               );
             },
@@ -203,6 +218,7 @@ const MessageBubble = ({ role, content, images, file }) => {
         </Markdown>
       </div>
 
+      {/* Lightbox Modal */}
       {lightBox && (
         <div
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-6 cursor-zoom-out"
@@ -210,7 +226,7 @@ const MessageBubble = ({ role, content, images, file }) => {
         >
           <button
             type="button"
-            className="absolute top-5 right-5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2.5 cursor-pointer transition"
+            className="absolute top-5 right-5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2 cursor-pointer transition"
             onClick={() => setLightBox(null)}
           >
             ✕
@@ -219,7 +235,7 @@ const MessageBubble = ({ role, content, images, file }) => {
           <img
             src={lightBox}
             alt="expanded preview"
-            className="max-w-[92vw] max-h-[88vh] rounded-2xl border border-white/10 shadow-2xl object-contain"
+            className="max-w-[92vw] max-h-[88vh] rounded-2xl border border-white/[0.08] shadow-2xl object-contain"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
