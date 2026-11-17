@@ -1,0 +1,32 @@
+export const PLANS = {
+  free: {
+    id: "free",
+    name: "Free",
+    amount: 0,
+    credits: 100,
+    validity: 30,
+    currency: "USD",
+    symbol: "$",
+    formattedPrice: "$0",
+  },
+  starter: {
+    id: "starter",
+    name: "Starter",
+    amount: 9.99,
+    credits: 500,
+    validity: 30,
+    currency: "USD",
+    symbol: "$",
+    formattedPrice: "$9.99",
+  },
+  pro: {
+    id: "pro",
+    name: "Pro",
+    amount: 19.99,
+    credits: 1500,
+    validity: 30,
+    currency: "USD",
+    symbol: "$",
+    formattedPrice: "$19.99",
+  },
+};
